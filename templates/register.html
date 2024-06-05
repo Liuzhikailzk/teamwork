@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册系统</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 300px;
+            margin: 50px auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>注册</h2>
+        <div class="form-group">
+            <label for="phone">手机号:</label>
+            <input type="text" id="phone">
+        </div>
+        <div class="form-group">
+            <button id="send_sms" onclick="sendSMS()">发送短信</button>
+        </div>
+        <div class="form-group">
+            <label for="sms_code">短信验证码:</label>
+            <input type="text" id="sms_code">
+        </div>
+        <div class="form-group">
+            <input type="checkbox" id="agreement">
+            <label for="agreement">用户使用协议</label>
+            <a href="#" onclick="showAgreement()">查看协议</a>
+        </div>
+        <div class="form-group">
+            <button id="register" onclick="register()">注册</button>
+        </div>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        let countdown;
+        let code;
+
+        function sendSMS() {
+            const phone = $('#phone').val();
+            if (!phone) {
+                alert("请输入手机号");
+                return;
+            }
+
+            $('#send_sms').prop('disabled', true);
+            $('#send_sms').text('发送中...');
+
+            $.post('/send_sms', {phone: phone}, function(data) {
+                code = data.code;
+                startCountdown();
+            });
+        }
+
+        function startCountdown() {
+            let seconds = 60;
+            $('#send_sms').text(`${seconds} 秒`);
+            countdown = setInterval(function() {
+                seconds--;
+                $('#send_sms').text(`${seconds} 秒`);
+                if (seconds === 0) {
+                    clearInterval(countdown);
+                    $('#send_sms').prop('disabled', false);
+                    $('#send_sms').text('发送短信');
+                }
+            }, 1000);
+        }
+
+
+        function register() {
+            const phone = $('#phone').val();
+            const input_code = $('#sms_code').val();
+            const agreement = $('#agreement').prop('checked');
+
+            $.post('/register', {phone: phone, code: code, input_code: input_code, agreement: agreement}, function(response) {
+                $('#message').text(response.message);
+                if (response.success) {
+                    alert("注册成功");
+                    window.location.href = response.redirect;
+                }
+            });
+        }
+
+
+
+        function showAgreement() {
+            alert("用户使用协议内容在此展示...");
+        }
+    </script>
+</body>
+</html>
