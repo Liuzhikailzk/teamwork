@@ -24,6 +24,29 @@ class User(db.Model):
     role = db.Column(db.String(20), default='user')  # 新增字段，用于区分用户角色
 
 
+class LotteryRule(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500))
+    prizes = db.relationship('Prize', backref='lottery_rule', lazy=True)
+    participants = db.relationship('Participant', backref='lottery_rule', lazy=True)
+    mode = db.Column(db.String(100))
+
+
+class Prize(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    lottery_rule_id = db.Column(db.Integer, db.ForeignKey('lottery_rule.id'), nullable=False)
+
+
+class Participant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100))
+    lottery_rule_id = db.Column(db.Integer, db.ForeignKey('lottery_rule.id'), nullable=True)
+
+
 # 初始化数据库
 with app.app_context():
     db.create_all()
@@ -32,7 +55,6 @@ with app.app_context():
         admin_user = User(phone='admin', password='admin', role='admin')
         db.session.add(admin_user)
         db.session.commit()
-
 
 
 @app.route('/')
@@ -58,6 +80,12 @@ def admin_dashboard():
 @app.route('/change_password', methods=['GET'])
 def change_password_page():
     return render_template('change_password.html')
+
+
+@app.route('/lottery_rules')
+def lottery_rules():
+    rules = LotteryRule.query.all()
+    return render_template('lottery_rules.html', rules=rules)
 
 
 @app.route('/send_sms', methods=['POST'])
@@ -137,6 +165,7 @@ def calculate_password_strength(password):
 
     return score
 
+
 @app.route('/change_password', methods=['POST'])
 def change_password():
     phone = request.form['phone']
@@ -165,7 +194,6 @@ def change_password():
     return jsonify({"success": False, "message": "用户不存在"})
 
 
-
 @app.route('/logout', methods=['POST'])
 def logout():
     # 在这里可以执行任何需要的清理操作，例如清理会话数据
@@ -184,9 +212,41 @@ def update_user():
         return jsonify({"success": True, "message": "用户信息更新成功"})
     return jsonify({"success": False, "message": "用户不存在"})
 
-#todo 需要修改home.html实现抽奖功能
+@app.route('/add_lottery_rule', methods=['GET', 'POST'])
+def add_lottery_rule():
+    if request.method == 'POST':
+        name = request.form['name']
+        description = request.form['description']
+        mode = request.form['mode']
+        rule = LotteryRule(name=name, description=description, mode=mode)
+        db.session.add(rule)
+        db.session.commit()
+        return redirect(url_for('lottery_rules'))
+    return render_template('add_lottery_rule.html')
+
+@app.route('/edit_lottery_rule/<int:id>', methods=['GET', 'POST'])
+def edit_lottery_rule(id):
+    rule = LotteryRule.query.get(id)
+    if request.method == 'POST':
+        rule.name = request.form['name']
+        rule.description = request.form['description']
+        rule.mode = request.form['mode']
+        db.session.commit()
+        return redirect(url_for('lottery_rules'))
+    return render_template('edit_lottery_rule.html', rule=rule)
+
+@app.route('/delete_lottery_rule', methods=['POST'])
+def delete_lottery_rule():
+    id = request.form['id']
+    rule = LotteryRule.query.get(id)
+    if rule:
+        db.session.delete(rule)
+        db.session.commit()
+        return jsonify({"success": True})
+    return jsonify({"success": False})
+
+# todo 需要修改home.html实现抽奖功能
 
 if __name__ == '__main__':
     db.create_all()
     app.run(debug=True)
-

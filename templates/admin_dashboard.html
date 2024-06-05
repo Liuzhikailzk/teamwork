@@ -10,8 +10,9 @@
             font-family: Arial, sans-serif;
         }
         .container {
-            width: 300px;
+            width: 80%;
             margin: 50px auto;
+            text-align: center;
         }
         h2 {
             text-align: center;
@@ -22,15 +23,17 @@
             color: white;
             border: none;
             cursor: pointer;
-            display: block;
-            margin: 20px auto;
+            margin: 10px;
+        }
+        .rules {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>抽奖管理系统</h2>
-        <p>欢迎管理员！</p>
+        <button onclick="window.location.href='/lottery_rules'">抽奖规则设置</button>
         <button onclick="logout()">退出登录</button>
     </div>
 

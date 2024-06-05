@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑抽奖规则</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 80%;
+            margin: 50px auto;
+        }
+        h2 {
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input, textarea, select {
+            margin: 10px 0;
+            padding: 8px;
+            font-size: 1em;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>编辑抽奖规则</h2>
+        <form method="post">
+            <label for="name">规则名称:</label>
+            <input type="text" id="name" name="name" value="{{ rule.name }}" required>
+
+            <label for="description">规则描述:</label>
+            <textarea id="description" name="description" rows="4" required>{{ rule.description }}</textarea>
+
+            <label for="mode">抽奖模式:</label>
+            <select id="mode" name="mode" required>
+                <option value="确定奖项后，随机抽取获奖人" {% if rule.mode == "确定奖项后，随机抽取获奖人" %}selected{% endif %}>确定奖项后，随机抽取获奖人</option>
+                <option value="确定奖项后，随机抽取获奖人员，但排除已获奖人员" {% if rule.mode == "确定奖项后，随机抽取获奖人员，但排除已获奖人员" %}selected{% endif %}>确定奖项后，随机抽取获奖人员，但排除已获奖人员</option>
+                <option value="随机抽取获奖人员后，随机抽取奖品" {% if rule.mode == "随机抽取获奖人员后，随机抽取奖品" %}selected{% endif %}>随机抽取获奖人员后，随机抽取奖品</option>
+                <option value="随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品" {% if rule.mode == "随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品" %}selected{% endif %}>随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品</option>
+            </select>
+
+            <button type="submit">提交</button>
+        </form>
+    </div>
+</body>
+</html>
