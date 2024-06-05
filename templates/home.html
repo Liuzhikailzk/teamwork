@@ -4,11 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>主页</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 300px;
+            margin: 50px auto;
+        }
+        h2 {
+            text-align: center;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h2>欢迎来到主页</h2>
         <p>登录成功！</p>
+        <button onclick="logout()">退出登录</button>
     </div>
+
+    <script>
+        function logout() {
+            $.post('/logout', function(response) {
+                if (response.success) {
+                    window.location.href = response.redirect;
+                }
+            });
+        }
+    </script>
 </body>
 </html>

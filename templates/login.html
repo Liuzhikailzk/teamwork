@@ -56,20 +56,20 @@
 
     <script>
         function login() {
-            const phone = $('#phone').val();
-            const password = $('#password').val();
+        const phone = $('#phone').val();
+        const password = $('#password').val();
 
-            $.post('/login', {phone: phone, password: password}, function(response) {
-                if (response.change_password) {
-                    localStorage.setItem('phone', phone);
-                    window.location.href = '/change_password';
-                } else if (response.success) {
-                    window.location.href = '/home';
-                } else {
-                    $('#message').text(response.message);
-                }
-            });
-        }
+        $.post('/login', {phone: phone, password: password}, function(response) {
+            if (response.change_password) {
+                localStorage.setItem('phone', phone);
+                window.location.href = '/change_password';
+            } else if (response.success) {
+                window.location.href = response.redirect;
+            } else {
+                $('#message').text(response.message);
+            }
+        });
+    }
     </script>
 </body>
 </html>

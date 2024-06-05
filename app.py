@@ -11,8 +11,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# 初始化数据库
 
+# 初始化数据库
 
 
 # 创建用户表模型
@@ -21,20 +21,40 @@ class User(db.Model):
     phone = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     login_count = db.Column(db.Integer, default=0)
+    role = db.Column(db.String(20), default='user')  # 新增字段，用于区分用户角色
 
 
+# 初始化数据库
 with app.app_context():
     db.create_all()
+    # 创建管理员账号
+    if not User.query.filter_by(phone='admin').first():
+        admin_user = User(phone='admin', password='admin', role='admin')
+        db.session.add(admin_user)
+        db.session.commit()
+
+
 
 @app.route('/')
 def login():
     return render_template('login.html')
+
+
 @app.route('/register')
 def register():
     return render_template('register.html')
+
+
 @app.route('/home')
 def home():
     return render_template('home.html')
+
+
+@app.route('/admin_dashboard')
+def admin_dashboard():
+    return render_template('admin_dashboard.html')
+
+
 @app.route('/change_password', methods=['GET'])
 def change_password_page():
     return render_template('change_password.html')
@@ -50,6 +70,7 @@ def send_sms():
     print(f"Sending SMS to {phone_number} with verification code: {verification_code}")
     # 将验证码返回给前端
     return jsonify({"code": verification_code})
+
 
 @app.route('/register', methods=['POST'])
 def register_user():
@@ -71,7 +92,6 @@ def register_user():
     return jsonify({"success": True, "message": "注册成功", "redirect": url_for('login')})
 
 
-
 @app.route('/login', methods=['POST'])
 def login_user():
     phone = request.form['phone']
@@ -79,19 +99,23 @@ def login_user():
     user = User.query.filter_by(phone=phone).first()
 
     if user and user.password == password:
+        if user.role == 'admin':
+            return jsonify({"success": True, "redirect": url_for('admin_dashboard')})
         if password == phone:
             return jsonify({"change_password": True})
         user.login_count += 1
         db.session.commit()
-        return jsonify({"success": True})
+        return jsonify({"success": True, "redirect": url_for('home')})
     return jsonify({"success": False, "message": "账号和密码不正确"})
+
+
 @app.route('/change_password', methods=['POST'])
 def change_password():
     phone = request.form['phone']
     new_password = request.form['new_password']
     confirm_password = request.form['confirm_password']
     email = request.form['email']
-
+    # todo 密码要数字和字母组合，增加密码强度验证功能
     if not re.match(r'[A-Za-z0-9]{6,}', new_password):
         return jsonify({"success": False, "message": "密码要数字和字母组成，且长度大于六位"})
 
@@ -100,7 +124,7 @@ def change_password():
 
     if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
         return jsonify({"success": False, "message": "请输入正确电子邮箱"})
-
+    # todo 选择添加，多次输入密码后需要输入验证码
     user = User.query.filter_by(phone=phone).first()
     print(f"User found: {user}")
     if user:
@@ -108,6 +132,12 @@ def change_password():
         db.session.commit()
         return jsonify({"success": True, "redirect": url_for('home')})
     return jsonify({"success": False, "message": "用户不存在"})
+
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    # 在这里可以执行任何需要的清理操作，例如清理会话数据
+    return jsonify({"success": True, "redirect": url_for('login')})
 
 
 @app.route('/update_user', methods=['POST'])
@@ -122,7 +152,9 @@ def update_user():
         return jsonify({"success": True, "message": "用户信息更新成功"})
     return jsonify({"success": False, "message": "用户不存在"})
 
+#todo 需要修改home.html实现抽奖功能
 
 if __name__ == '__main__':
     db.create_all()
     app.run(debug=True)
+
