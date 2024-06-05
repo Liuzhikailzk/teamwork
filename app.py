@@ -109,13 +109,41 @@ def login_user():
     return jsonify({"success": False, "message": "账号和密码不正确"})
 
 
+def calculate_password_strength(password):
+    score = 0
+
+    # 一、密码长度
+    if len(password) <= 4:
+        score += 5
+    elif 5 <= len(password) <= 7:
+        score += 10
+    else:
+        score += 25
+
+    # 二、字母
+    if re.search('[a-zA-Z]', password):
+        if re.search('[a-z]', password) and re.search('[A-Z]', password):
+            score += 20
+        else:
+            score += 10
+    else:
+        score += 0
+
+    # 三、数字
+    if re.search('[0-9]', password):
+        score += 10
+    else:
+        score += 0
+
+    return score
+
 @app.route('/change_password', methods=['POST'])
 def change_password():
     phone = request.form['phone']
     new_password = request.form['new_password']
     confirm_password = request.form['confirm_password']
     email = request.form['email']
-    # todo 密码要数字和字母组合，增加密码强度验证功能
+
     if not re.match(r'[A-Za-z0-9]{6,}', new_password):
         return jsonify({"success": False, "message": "密码要数字和字母组成，且长度大于六位"})
 
@@ -124,14 +152,18 @@ def change_password():
 
     if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
         return jsonify({"success": False, "message": "请输入正确电子邮箱"})
-    # todo 选择添加，多次输入密码后需要输入验证码
+
+    password_strength = calculate_password_strength(new_password)
+    if password_strength < 30:
+        return jsonify({"success": False, "message": "密码强度不够，请使用更复杂的密码"})
+
     user = User.query.filter_by(phone=phone).first()
-    print(f"User found: {user}")
     if user:
         user.password = new_password
         db.session.commit()
         return jsonify({"success": True, "redirect": url_for('home')})
     return jsonify({"success": False, "message": "用户不存在"})
+
 
 
 @app.route('/logout', methods=['POST'])

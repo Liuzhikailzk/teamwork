@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>抽奖管理系统</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,13 +16,32 @@
         h2 {
             text-align: center;
         }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>抽奖管理系统</h2>
         <p>欢迎管理员！</p>
-        <!-- 这里可以添加更多抽奖管理系统的内容 -->
+        <button onclick="logout()">退出登录</button>
     </div>
+
+    <script>
+        function logout() {
+            $.post('/logout', function(response) {
+                if (response.success) {
+                    window.location.href = response.redirect;
+                }
+            });
+        }
+    </script>
 </body>
 </html>
