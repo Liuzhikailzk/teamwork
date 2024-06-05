@@ -1,26 +1,45 @@
 import random
 import time
 from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask_sqlalchemy import SQLAlchemy
 import re
 
 app = Flask(__name__)
 
-# 模拟数据库
-users = {}
+# 数据库
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
+# 初始化数据库
+
+
+
+# 创建用户表模型
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    login_count = db.Column(db.Integer, default=0)
+
+
+with app.app_context():
+    db.create_all()
 
 @app.route('/')
 def login():
     return render_template('login.html')
-
-
 @app.route('/register')
 def register():
     return render_template('register.html')
-
 @app.route('/home')
 def home():
     return render_template('home.html')
+@app.route('/change_password', methods=['GET'])
+def change_password_page():
+    return render_template('change_password.html')
+
+
 @app.route('/send_sms', methods=['POST'])
 def send_sms():
     # 模拟发送短信验证码
@@ -31,6 +50,7 @@ def send_sms():
     print(f"Sending SMS to {phone_number} with verification code: {verification_code}")
     # 将验证码返回给前端
     return jsonify({"code": verification_code})
+
 @app.route('/register', methods=['POST'])
 def register_user():
     phone = request.form['phone']
@@ -44,7 +64,10 @@ def register_user():
     if not agreement:
         return jsonify({"success": False, "message": "没有选择用户使用协议"})
 
-    users[phone] = {"password": phone}
+    user = User(phone=phone, password=phone)
+    db.session.add(user)
+    db.session.commit()
+
     return jsonify({"success": True, "message": "注册成功", "redirect": url_for('login')})
 
 
@@ -53,14 +76,15 @@ def register_user():
 def login_user():
     phone = request.form['phone']
     password = request.form['password']
+    user = User.query.filter_by(phone=phone).first()
 
-    if phone in users and users[phone]['password'] == password:
+    if user and user.password == password:
         if password == phone:
             return jsonify({"change_password": True})
+        user.login_count += 1
+        db.session.commit()
         return jsonify({"success": True})
     return jsonify({"success": False, "message": "账号和密码不正确"})
-
-
 @app.route('/change_password', methods=['POST'])
 def change_password():
     phone = request.form['phone']
@@ -77,10 +101,28 @@ def change_password():
     if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
         return jsonify({"success": False, "message": "请输入正确电子邮箱"})
 
-    users[phone]['password'] = new_password
-    users[phone]['email'] = email
-    return jsonify({"success": True})
+    user = User.query.filter_by(phone=phone).first()
+    print(f"User found: {user}")
+    if user:
+        user.password = new_password
+        db.session.commit()
+        return jsonify({"success": True, "redirect": url_for('home')})
+    return jsonify({"success": False, "message": "用户不存在"})
+
+
+@app.route('/update_user', methods=['POST'])
+def update_user():
+    phone = request.form['phone']
+    new_password = request.form['new_password']
+    user = User.query.filter_by(phone=phone).first()
+
+    if user:
+        user.password = new_password
+        db.session.commit()
+        return jsonify({"success": True, "message": "用户信息更新成功"})
+    return jsonify({"success": False, "message": "用户不存在"})
 
 
 if __name__ == '__main__':
+    db.create_all()
     app.run(debug=True)

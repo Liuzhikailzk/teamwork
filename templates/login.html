@@ -61,6 +61,7 @@
 
             $.post('/login', {phone: phone, password: password}, function(response) {
                 if (response.change_password) {
+                    localStorage.setItem('phone', phone);
                     window.location.href = '/change_password';
                 } else if (response.success) {
                     window.location.href = '/home';
