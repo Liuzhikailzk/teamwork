@@ -3,57 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新增抽奖规则</title>
+    <title>抽奖规则设置页面</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
         .container {
-            width: 80%;
-            margin: 50px auto;
-        }
-        h2 {
-            text-align: center;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-        input, textarea, select {
-            margin: 10px 0;
-            padding: 8px;
-            font-size: 1em;
-        }
-        button {
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin: 10px 0;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>新增抽奖规则</h2>
+        <h2 class="text-center">抽奖规则设置</h2>
         <form method="post">
-            <label for="name">规则名称:</label>
-            <input type="text" id="name" name="name" required>
-
-            <label for="description">规则描述:</label>
-            <textarea id="description" name="description" rows="4" required></textarea>
-
-            <label for="mode">抽奖模式:</label>
-            <select id="mode" name="mode" required>
-                <option value="确定奖项后，随机抽取获奖人">确定奖项后，随机抽取获奖人</option>
-                <option value="确定奖项后，随机抽取获奖人员，但排除已获奖人员">确定奖项后，随机抽取获奖人员，但排除已获奖人员</option>
-                <option value="随机抽取获奖人员后，随机抽取奖品">随机抽取获奖人员后，随机抽取奖品</option>
-                <option value="随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品">随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品</option>
-            </select>
-
-            <button type="submit">提交</button>
+            <div class="form-group">
+                <label for="name">规则名称</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="description">规则描述</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="department">所属部门</label>
+                <select class="form-control" id="department" name="department" required>
+                    <option value="市场部">市场部</option>
+                    <option value="销售部">销售部</option>
+                    <option value="技术部">技术部</option>
+                    <option value="人力资源部">人力资源部</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="participants">参与人员设置</label>
+                <select class="form-control" id="participants" name="participants">
+                    <option value="现场扫码">现场人员扫码报名</option>
+                    <option value="导入人员">从已导入的抽奖人员中选择</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="prizes">奖品设置</label>
+                <div id="prize_list">
+                    <div class="input-group mb-3 prize-item">
+                        <input type="text" class="form-control" name="prize_name[]" placeholder="奖品名称" required>
+                        <input type="number" class="form-control" name="prize_quantity[]" placeholder="数量" required>
+                        <input type="text" class="form-control" name="prize_details[]" placeholder="奖品详情" required>
+                        <div class="input-group-append">
+                            <button class="btn btn-danger" type="button" onclick="removePrize(this)">删除</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" type="button" onclick="addPrize()">+ 添加奖品</button>
+            </div>
+            <div class="form-group">
+                <label for="mode">抽奖模式</label>
+                <select class="form-control" id="mode" name="mode" required>
+                    <option value="确定奖项后，随机抽取获奖人">确定奖项后，随机抽取获奖人</option>
+                    <option value="确定奖项后，随机抽取获奖人员，但排除已获奖人员">确定奖项后，随机抽取获奖人员，但排除已获奖人员</option>
+                    <option value="随机抽取获奖人员后，随机抽取奖品">随机抽取获奖人员后，随机抽取奖品</option>
+                    <option value="随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品">随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">保存</button>
+            <button type="button" class="btn btn-secondary" onclick="window.history.back()">返回</button>
         </form>
     </div>
+
+    <script>
+        function addPrize() {
+            const prizeList = document.getElementById('prize_list');
+            const newPrize = document.createElement('div');
+            newPrize.classList.add('input-group', 'mb-3', 'prize-item');
+            newPrize.innerHTML = `
+                <input type="text" class="form-control" name="prize_name[]" placeholder="奖品名称" required>
+                <input type="number" class="form-control" name="prize_quantity[]" placeholder="数量" required>
+                <input type="text" class="form-control" name="prize_details[]" placeholder="奖品详情" required>
+                <div class="input-group-append">
+                    <button class="btn btn-danger" type="button" onclick="removePrize(this)">删除</button>
+                </div>`;
+            prizeList.appendChild(newPrize);
+        }
+
+        function removePrize(button) {
+            button.closest('.prize-item').remove();
+        }
+    </script>
 </body>
 </html>

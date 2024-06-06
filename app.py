@@ -2,6 +2,7 @@ import random
 import time
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 import re
 
 app = Flask(__name__)
@@ -24,13 +25,18 @@ class User(db.Model):
     role = db.Column(db.String(20), default='user')  # 新增字段，用于区分用户角色
 
 
+
+
 class LotteryRule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500))
     prizes = db.relationship('Prize', backref='lottery_rule', lazy=True)
-    participants = db.relationship('Participant', backref='lottery_rule', lazy=True)
-    mode = db.Column(db.String(100))
+    participants = db.Column(db.String(100), nullable=False)
+    mode = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(100), default='admin')
+    department = db.Column(db.String(100), nullable=False)
 
 
 class Prize(db.Model):
@@ -212,30 +218,61 @@ def update_user():
         return jsonify({"success": True, "message": "用户信息更新成功"})
     return jsonify({"success": False, "message": "用户不存在"})
 
-@app.route('/add_lottery_rule', methods=['GET', 'POST'])
+
+@app.route('/add_lottery_rule', methods=['GET', 'POST'], endpoint='add_lottery_rule')
 def add_lottery_rule():
     if request.method == 'POST':
         name = request.form['name']
         description = request.form['description']
+        participants = request.form['participants']
         mode = request.form['mode']
-        rule = LotteryRule(name=name, description=description, mode=mode)
+        department = request.form['department']
+
+        rule = LotteryRule(name=name, description=description, participants=participants, mode=mode,
+                           department=department)
         db.session.add(rule)
+        db.session.commit()
+
+        prize_names = request.form.getlist('prize_name[]')
+        prize_quantities = request.form.getlist('prize_quantity[]')
+        prize_details = request.form.getlist('prize_details[]')
+
+        for i in range(len(prize_names)):
+            prize = Prize(name=prize_names[i], quantity=prize_quantities[i], lottery_rule_id=rule.id)
+            db.session.add(prize)
+
         db.session.commit()
         return redirect(url_for('lottery_rules'))
     return render_template('add_lottery_rule.html')
 
-@app.route('/edit_lottery_rule/<int:id>', methods=['GET', 'POST'])
+
+@app.route('/edit_lottery_rule/<int:id>', methods=['GET', 'POST'], endpoint='edit_lottery_rule')
 def edit_lottery_rule(id):
     rule = LotteryRule.query.get(id)
     if request.method == 'POST':
         rule.name = request.form['name']
         rule.description = request.form['description']
+        rule.participants = request.form['participants']
         rule.mode = request.form['mode']
+        rule.department = request.form['department']
+
+        # 删除现有奖品，添加新奖品
+        Prize.query.filter_by(lottery_rule_id=id).delete()
+        prize_names = request.form.getlist('prize_name[]')
+        prize_quantities = request.form.getlist('prize_quantity[]')
+        prize_details = request.form.getlist('prize_details[]')
+
+        for i in range(len(prize_names)):
+            prize = Prize(name=prize_names[i], quantity=prize_quantities[i], details=prize_details[i],
+                          lottery_rule_id=rule.id)
+            db.session.add(prize)
+
         db.session.commit()
         return redirect(url_for('lottery_rules'))
     return render_template('edit_lottery_rule.html', rule=rule)
 
-@app.route('/delete_lottery_rule', methods=['POST'])
+
+@app.route('/delete_lottery_rule', methods=['POST'], endpoint='delete_lottery_rule')
 def delete_lottery_rule():
     id = request.form['id']
     rule = LotteryRule.query.get(id)
@@ -244,6 +281,9 @@ def delete_lottery_rule():
         db.session.commit()
         return jsonify({"success": True})
     return jsonify({"success": False})
+
+
+
 
 # todo 需要修改home.html实现抽奖功能
 

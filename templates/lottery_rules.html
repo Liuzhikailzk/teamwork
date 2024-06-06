@@ -3,48 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>抽奖规则设置</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>抽奖规则设置首页</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
         .container {
-            width: 80%;
-            margin: 50px auto;
+            margin-top: 20px;
         }
-        h2 {
-            text-align: center;
-        }
-        .rule {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin: 10px 0;
-        }
-        button {
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin: 10px;
+        .actions button {
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>抽奖规则设置</h2>
-        <button onclick="window.location.href='/add_lottery_rule'">新增抽奖规则</button>
-        <div class="rules">
-            {% for rule in rules %}
-            <div class="rule">
-                <h3>{{ rule.name }}</h3>
-                <p>{{ rule.description }}</p>
-                <button onclick="editRule({{ rule.id }})">编辑</button>
-                <button onclick="deleteRule({{ rule.id }})">删除</button>
-            </div>
-            {% endfor %}
+        <h2 class="text-center">抽奖规则设置首页</h2>
+        <div class="d-flex justify-content-between mb-3">
+            <input type="text" class="form-control w-25" placeholder="规则名称">
+            <button class="btn btn-primary ml-3">搜索</button>
+            <button class="btn btn-success ml-auto" onclick="window.location.href='/add_lottery_rule'">新增规则</button>
         </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>规则名称</th>
+                    <th>创建时间</th>
+                    <th>创建人</th>
+                    <th>所属部门</th>
+                    <th>描述</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in rules %}
+                <tr>
+                    <td>{{ rule.id }}</td>
+                    <td>{{ rule.name }}</td>
+                    <td>{{ rule.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ rule.created_by }}</td>
+                    <td>{{ rule.department }}</td>
+                    <td>{{ rule.description }}</td>
+                    <td class="actions">
+                        <button class="btn btn-primary" onclick="editRule({{ rule.id }})">编辑</button>
+                        <button class="btn btn-danger" onclick="deleteRule({{ rule.id }})">删除</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <script>
