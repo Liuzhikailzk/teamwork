@@ -9,6 +9,14 @@
         .container {
             margin-top: 20px;
         }
+        .qr-code-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .qr-code-container img {
+            max-width: 200px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -34,7 +42,7 @@
             </div>
             <div class="form-group">
                 <label for="participants">参与人员设置</label>
-                <select class="form-control" id="participants" name="participants">
+                <select class="form-control" id="participants" name="participants" onchange="generateQRCode()">
                     <option value="现场扫码" {% if rule and rule.participants == "现场扫码" %}selected{% endif %}>现场人员扫码报名</option>
                     <option value="导入人员" {% if rule and rule.participants == "导入人员" %}selected{% endif %}>从已导入的抽奖人员中选择</option>
                 </select>
@@ -79,6 +87,11 @@
             <button type="submit" class="btn btn-primary">提交</button>
             <button type="button" class="btn btn-secondary" onclick="window.history.back()">返回</button>
         </form>
+        <div class="qr-code-container">
+            <h4>现场人员扫码报名</h4>
+            <img id="qr-code-image" src="" alt="QR Code">
+            <a id="download-link" href="#" download="qrcode.png" class="btn btn-info">下载二维码</a>
+        </div>
     </div>
 
     <script>
@@ -138,6 +151,31 @@
                   }
               });
         });
+
+        function generateQRCode() {
+            const participants = document.getElementById('participants').value;
+            if (participants === '现场扫码') {
+                const name = document.getElementById('name').value;
+                const description = document.getElementById('description').value;
+                const department = document.getElementById('department').value;
+                const mode = document.getElementById('mode').value;
+
+                const qrCodeImage = document.getElementById('qr-code-image');
+                const downloadLink = document.getElementById('download-link');
+
+                fetch(`/generate_qr_code?name=${encodeURIComponent(name)}&description=${encodeURIComponent(description)}&department=${encodeURIComponent(department)}&participants=${encodeURIComponent(participants)}&mode=${encodeURIComponent(mode)}`)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const url = URL.createObjectURL(blob);
+                        qrCodeImage.src = url;
+                        downloadLink.href = url;
+                    });
+            }
+        }
+
+        window.onload = function() {
+            generateQRCode();  // 初始化时生成二维码
+        };
     </script>
 </body>
 </html>

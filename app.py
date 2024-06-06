@@ -4,6 +4,9 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import re
+import qrcode
+from io import BytesIO
+from flask import send_file
 
 app = Flask(__name__)
 
@@ -335,8 +338,31 @@ def delete_lottery_rule():
     return jsonify({"success": False})
 
 
+@app.route('/generate_qr_code', methods=['GET'])
+def generate_qr_code():
+    # 构造二维码数据
+    name = request.args.get('name', 'Default Rule Name')
+    description = request.args.get('description', 'Default Description')
+    department = request.args.get('department', 'Default Department')
+    participants = request.args.get('participants', 'Default Participants')
+    mode = request.args.get('mode', 'Default Mode')
 
+    data = f"Name: {name}\nDescription: {description}\nDepartment: {department}\nParticipants: {participants}\nMode: {mode}"
 
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(fill='black', back_color='white')
+
+    buffer = BytesIO()
+    img.save(buffer, 'PNG')
+    buffer.seek(0)
+    return send_file(buffer, mimetype='image/png', as_attachment=False)
 # todo 需要修改home.html实现抽奖功能
 
 if __name__ == '__main__':
