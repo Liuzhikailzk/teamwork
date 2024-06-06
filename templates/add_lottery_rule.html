@@ -14,55 +14,69 @@
 <body>
     <div class="container">
         <h2 class="text-center">抽奖规则设置</h2>
-        <form method="post">
+        <form id="lotteryRuleForm" method="post">
             <div class="form-group">
                 <label for="name">规则名称</label>
-                <input type="text" class="form-control" id="name" name="name" required>
+                <input type="text" class="form-control" id="name" name="name" value="{{ rule.name if rule else '' }}" required>
             </div>
             <div class="form-group">
                 <label for="description">规则描述</label>
-                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                <textarea class="form-control" id="description" name="description" rows="3" required>{{ rule.description if rule else '' }}</textarea>
             </div>
             <div class="form-group">
                 <label for="department">所属部门</label>
                 <select class="form-control" id="department" name="department" required>
-                    <option value="市场部">市场部</option>
-                    <option value="销售部">销售部</option>
-                    <option value="技术部">技术部</option>
-                    <option value="人力资源部">人力资源部</option>
+                    <option value="市场部" {% if rule and rule.department == "市场部" %}selected{% endif %}>市场部</option>
+                    <option value="销售部" {% if rule and rule.department == "销售部" %}selected{% endif %}>销售部</option>
+                    <option value="技术部" {% if rule and rule.department == "技术部" %}selected{% endif %}>技术部</option>
+                    <option value="人力资源部" {% if rule and rule.department == "人力资源部" %}selected{% endif %}>人力资源部</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="participants">参与人员设置</label>
                 <select class="form-control" id="participants" name="participants">
-                    <option value="现场扫码">现场人员扫码报名</option>
-                    <option value="导入人员">从已导入的抽奖人员中选择</option>
+                    <option value="现场扫码" {% if rule and rule.participants == "现场扫码" %}selected{% endif %}>现场人员扫码报名</option>
+                    <option value="导入人员" {% if rule and rule.participants == "导入人员" %}selected{% endif %}>从已导入的抽奖人员中选择</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="prizes">奖品设置</label>
                 <div id="prize_list">
-                    <div class="input-group mb-3 prize-item">
-                        <input type="text" class="form-control" name="prize_name[]" placeholder="奖品名称" required>
-                        <input type="number" class="form-control" name="prize_quantity[]" placeholder="数量" required>
-                        <input type="text" class="form-control" name="prize_details[]" placeholder="奖品详情" required>
-                        <div class="input-group-append">
-                            <button class="btn btn-danger" type="button" onclick="removePrize(this)">删除</button>
+                    {% if rule %}
+                        {% for prize in rule.prizes %}
+                            <div class="input-group mb-3 prize-item">
+                                <input type="text" class="form-control" name="prize_name[]" value="{{ prize.name }}" placeholder="奖品名称" required>
+                                <input type="number" class="form-control" name="prize_quantity[]" value="{{ prize.quantity }}" placeholder="数量" required>
+                                <input type="text" class="form-control" name="prize_details[]" value="{{ prize.details }}" placeholder="奖品详情" required>
+                                <div class="input-group-append">
+                                    <button class="btn btn-danger" type="button" onclick="removePrize(this)">删除</button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="input-group mb-3 prize-item">
+                            <input type="text" class="form-control" name="prize_name[]" placeholder="奖品名称" required>
+                            <input type="number" class="form-control" name="prize_quantity[]" placeholder="数量" required>
+                            <input type="text" class="form-control" name="prize_details[]" placeholder="奖品详情" required>
+                            <div class="input-group-append">
+                                <button class="btn btn-danger" type="button" onclick="removePrize(this)">删除</button>
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
                 <button class="btn btn-secondary" type="button" onclick="addPrize()">+ 添加奖品</button>
             </div>
             <div class="form-group">
                 <label for="mode">抽奖模式</label>
                 <select class="form-control" id="mode" name="mode" required>
-                    <option value="确定奖项后，随机抽取获奖人">确定奖项后，随机抽取获奖人</option>
-                    <option value="确定奖项后，随机抽取获奖人员，但排除已获奖人员">确定奖项后，随机抽取获奖人员，但排除已获奖人员</option>
-                    <option value="随机抽取获奖人员后，随机抽取奖品">随机抽取获奖人员后，随机抽取奖品</option>
-                    <option value="随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品">随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品</option>
+                    <option value="确定奖项后，随机抽取获奖人" {% if rule and rule.mode == "确定奖项后，随机抽取获奖人" %}selected{% endif %}>确定奖项后，随机抽取获奖人</option>
+                    <option value="确定奖项后，随机抽取获奖人员，但排除已获奖人员" {% if rule and rule.mode == "确定奖项后，随机抽取获奖人员，但排除已获奖人员" %}selected{% endif %}>确定奖项后，随机抽取获奖人员，但排除已获奖人员</option>
+                    <option value="随机抽取获奖人员后，随机抽取奖品" {% if rule and rule.mode == "随机抽取获奖人员后，随机抽取奖品" %}selected{% endif %}>随机抽取获奖人员后，随机抽取奖品</option>
+                    <option value="随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品" {% if rule and rule.mode == "随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品" %}selected{% endif %}>随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary">保存</button>
+            <button type="button" class="btn btn-secondary" onclick="saveDraft()">暂存</button>
+            <button type="submit" class="btn btn-primary">提交</button>
             <button type="button" class="btn btn-secondary" onclick="window.history.back()">返回</button>
         </form>
     </div>
@@ -85,6 +99,45 @@
         function removePrize(button) {
             button.closest('.prize-item').remove();
         }
+
+        function saveDraft() {
+            const form = document.getElementById('lotteryRuleForm');
+            const formData = new FormData(form);
+            formData.append('status', 'draft');
+
+            fetch('/add_lottery_rule', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      alert('暂存成功');
+                      window.location.href = '/lottery_rules';
+                  } else {
+                      alert('暂存失败');
+                  }
+              });
+        }
+
+        document.getElementById('lotteryRuleForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const form = document.getElementById('lotteryRuleForm');
+            const formData = new FormData(form);
+            formData.append('status', 'final');
+
+            fetch('/add_lottery_rule', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      alert('提交成功');
+                      window.location.href = '/lottery_rules';
+                  } else {
+                      alert('提交失败');
+                  }
+              });
+        });
     </script>
 </body>
 </html>

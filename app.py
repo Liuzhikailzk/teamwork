@@ -37,13 +37,16 @@ class LotteryRule(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.String(100), default='admin')
     department = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(20), default='draft')
 
 
 class Prize(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
+    details = db.Column(db.String(200))  # 添加 details 字段
     lottery_rule_id = db.Column(db.Integer, db.ForeignKey('lottery_rule.id'), nullable=False)
+
 
 
 class Participant(db.Model):
@@ -88,10 +91,11 @@ def change_password_page():
     return render_template('change_password.html')
 
 
-@app.route('/lottery_rules')
+@app.route('/lottery_rules', endpoint='lottery_rules')
 def lottery_rules():
-    rules = LotteryRule.query.all()
+    rules = LotteryRule.query.filter_by(status='final').all()  # 只显示已提交的规则
     return render_template('lottery_rules.html', rules=rules)
+
 
 
 @app.route('/send_sms', methods=['POST'])
@@ -227,23 +231,65 @@ def add_lottery_rule():
         participants = request.form['participants']
         mode = request.form['mode']
         department = request.form['department']
+        status = request.form['status']
 
-        rule = LotteryRule(name=name, description=description, participants=participants, mode=mode,
-                           department=department)
-        db.session.add(rule)
-        db.session.commit()
+        # 检查是否已有暂存的规则，如果有则更新
+        existing_rule = LotteryRule.query.filter_by(status='draft').first()
+        if existing_rule:
+            existing_rule.name = name
+            existing_rule.description = description
+            existing_rule.participants = participants
+            existing_rule.mode = mode
+            existing_rule.department = department
+            existing_rule.status = status
+            db.session.commit()
 
-        prize_names = request.form.getlist('prize_name[]')
-        prize_quantities = request.form.getlist('prize_quantity[]')
-        prize_details = request.form.getlist('prize_details[]')
+            # 删除现有奖品，添加新奖品
+            Prize.query.filter_by(lottery_rule_id=existing_rule.id).delete()
+            prize_names = request.form.getlist('prize_name[]')
+            prize_quantities = request.form.getlist('prize_quantity[]')
+            prize_details = request.form.getlist('prize_details[]')
 
-        for i in range(len(prize_names)):
-            prize = Prize(name=prize_names[i], quantity=prize_quantities[i], lottery_rule_id=rule.id)
-            db.session.add(prize)
+            for i in range(len(prize_names)):
+                prize = Prize(name=prize_names[i], quantity=prize_quantities[i], details=prize_details[i],
+                              lottery_rule_id=existing_rule.id)
+                db.session.add(prize)
 
-        db.session.commit()
-        return redirect(url_for('lottery_rules'))
-    return render_template('add_lottery_rule.html')
+            db.session.commit()
+
+            if status == 'draft':
+                return jsonify({"success": True, "message": "暂存成功"})
+            else:
+                existing_rule.status = 'final'
+                db.session.commit()
+                return jsonify({"success": True, "message": "提交成功"})
+        else:
+            rule = LotteryRule(name=name, description=description, participants=participants, mode=mode,
+                               department=department, status=status)
+            db.session.add(rule)
+            db.session.commit()
+
+            prize_names = request.form.getlist('prize_name[]')
+            prize_quantities = request.form.getlist('prize_quantity[]')
+            prize_details = request.form.getlist('prize_details[]')
+
+            for i in range(len(prize_names)):
+                prize = Prize(name=prize_names[i], quantity=prize_quantities[i], details=prize_details[i],
+                              lottery_rule_id=rule.id)
+                db.session.add(prize)
+
+            db.session.commit()
+
+            if status == 'draft':
+                return jsonify({"success": True, "message": "暂存成功"})
+            else:
+                rule.status = 'final'
+                db.session.commit()
+                return jsonify({"success": True, "message": "提交成功"})
+
+    # 获取暂存的数据，如果有的话
+    draft_rule = LotteryRule.query.filter_by(status='draft').first()
+    return render_template('add_lottery_rule.html', rule=draft_rule)
 
 
 @app.route('/edit_lottery_rule/<int:id>', methods=['GET', 'POST'], endpoint='edit_lottery_rule')
@@ -255,6 +301,7 @@ def edit_lottery_rule(id):
         rule.participants = request.form['participants']
         rule.mode = request.form['mode']
         rule.department = request.form['department']
+        rule.status = request.form['status']
 
         # 删除现有奖品，添加新奖品
         Prize.query.filter_by(lottery_rule_id=id).delete()
@@ -268,7 +315,12 @@ def edit_lottery_rule(id):
             db.session.add(prize)
 
         db.session.commit()
-        return redirect(url_for('lottery_rules'))
+
+        if rule.status == 'draft':
+            return jsonify({"success": True, "message": "暂存成功"})
+        else:
+            return jsonify({"success": True, "message": "提交成功"})
+
     return render_template('edit_lottery_rule.html', rule=rule)
 
 
