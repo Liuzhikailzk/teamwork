@@ -58,15 +58,25 @@
             window.location.href = '/edit_lottery_rule/' + id;
         }
 
-        function deleteRule(id) {
+         function deleteRule(id) {
             if (confirm('是否要删除这一抽奖规则?')) {
-                $.post('/delete_lottery_rule', {id: id}, function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        alert('删除失败');
-                    }
-                });
+                fetch('/delete_lottery_rule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({ id: id })
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          location.reload();
+                      } else {
+                          alert('删除失败: ' + data.message);
+                      }
+                  }).catch(error => {
+                      console.error('Error:', error);
+                      alert('删除失败');
+                  });
             }
         }
     </script>

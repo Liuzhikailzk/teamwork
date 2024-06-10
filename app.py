@@ -34,7 +34,7 @@ class LotteryRule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500))
-    prizes = db.relationship('Prize', backref='lottery_rule', lazy=True)
+    prizes = db.relationship('Prize', backref='lottery_rule', lazy=True, cascade='all, delete-orphan')
     participants = db.Column(db.String(100), nullable=False)
     mode = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -42,12 +42,11 @@ class LotteryRule(db.Model):
     department = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), default='draft')
 
-
 class Prize(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
-    details = db.Column(db.String(200))  # 添加 details 字段
+    details = db.Column(db.String(200))
     lottery_rule_id = db.Column(db.Integer, db.ForeignKey('lottery_rule.id'), nullable=False)
 
 
@@ -98,7 +97,6 @@ def change_password_page():
 def lottery_rules():
     rules = LotteryRule.query.filter_by(status='final').all()  # 只显示已提交的规则
     return render_template('lottery_rules.html', rules=rules)
-
 
 
 @app.route('/send_sms', methods=['POST'])
@@ -327,16 +325,20 @@ def edit_lottery_rule(id):
     return render_template('edit_lottery_rule.html', rule=rule)
 
 
-@app.route('/delete_lottery_rule', methods=['POST'], endpoint='delete_lottery_rule')
+
+@app.route('/delete_lottery_rule', methods=['POST'])
 def delete_lottery_rule():
-    id = request.form['id']
-    rule = LotteryRule.query.get(id)
+    rule_id = request.form.get('id')
+    app.logger.info(f"Received request to delete rule with id: {rule_id}")
+    rule = LotteryRule.query.get(rule_id)
     if rule:
         db.session.delete(rule)
         db.session.commit()
+        app.logger.info(f"Successfully deleted rule with id: {rule_id}")
         return jsonify({"success": True})
-    return jsonify({"success": False})
-
+    else:
+        app.logger.error(f"Rule with id: {rule_id} not found")
+        return jsonify({"success": False, "message": "Rule not found"}), 404
 
 @app.route('/generate_qr_code', methods=['GET'])
 def generate_qr_code():
