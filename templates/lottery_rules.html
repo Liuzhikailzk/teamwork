@@ -17,11 +17,11 @@
 <body>
     <div class="container">
         <h2 class="text-center">抽奖规则设置首页</h2>
-        <div class="d-flex justify-content-between mb-3">
-            <input type="text" class="form-control w-25" placeholder="规则名称">
-            <button class="btn btn-primary ml-3">搜索</button>
-            <button class="btn btn-success ml-auto" onclick="window.location.href='/add_lottery_rule'">新增规则</button>
-        </div>
+        <form method="post" action="/lottery_rules" class="d-flex justify-content-between mb-3">
+            <input type="text" class="form-control w-25" name="search_query" placeholder="规则名称">
+            <button type="submit" class="btn btn-primary ml-3">搜索</button>
+            <button type="button" class="btn btn-success ml-auto" onclick="window.location.href='/add_lottery_rule'">新增规则</button>
+        </form>
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -51,14 +51,16 @@
                 {% endfor %}
             </tbody>
         </table>
+        <button type="button" class="btn btn-secondary back-button" onclick="window.location.href='/'">登出</button>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         function editRule(id) {
             window.location.href = '/edit_lottery_rule/' + id;
         }
 
-         function deleteRule(id) {
+        function deleteRule(id) {
             if (confirm('是否要删除这一抽奖规则?')) {
                 fetch('/delete_lottery_rule', {
                     method: 'POST',

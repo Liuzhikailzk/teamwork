@@ -92,11 +92,16 @@ def admin_dashboard():
 def change_password_page():
     return render_template('change_password.html')
 
-
-@app.route('/lottery_rules', endpoint='lottery_rules')
+# 实现了搜索的功能
+@app.route('/lottery_rules', methods=['GET', 'POST'])
 def lottery_rules():
-    rules = LotteryRule.query.filter_by(status='final').all()  # 只显示已提交的规则
+    if request.method == 'POST':
+        search_query = request.form.get('search_query', '')
+        rules = LotteryRule.query.filter(LotteryRule.name.contains(search_query)).filter_by(status='final').all()
+    else:
+        rules = LotteryRule.query.filter_by(status='final').all()
     return render_template('lottery_rules.html', rules=rules)
+
 
 
 @app.route('/send_sms', methods=['POST'])
