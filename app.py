@@ -309,7 +309,6 @@ def edit_lottery_rule(id):
         rule.department = request.form['department']
         rule.status = request.form['status']
 
-        # 删除现有奖品，添加新奖品
         Prize.query.filter_by(lottery_rule_id=id).delete()
         prize_names = request.form.getlist('prize_name[]')
         prize_quantities = request.form.getlist('prize_quantity[]')
@@ -328,7 +327,6 @@ def edit_lottery_rule(id):
             return jsonify({"success": True, "message": "提交成功"})
 
     return render_template('edit_lottery_rule.html', rule=rule)
-
 
 
 @app.route('/delete_lottery_rule', methods=['POST'])
