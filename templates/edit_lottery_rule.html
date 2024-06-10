@@ -6,8 +6,16 @@
     <title>编辑抽奖规则</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
+        body {
+            background-color: #f4f4f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         .container {
             margin-top: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .qr-code-container {
             text-align: center;
@@ -24,6 +32,10 @@
         }
         .actions .btn {
             margin-right: 10px;
+        }
+        .prize-item .input-group-prepend .input-group-text {
+            width: 120px;
+            justify-content: center;
         }
     </style>
 </head>
@@ -88,7 +100,7 @@
         <div class="qr-code-container" id="qr-code-container" style="display: none;">
             <h4>现场人员扫码报名</h4>
             <img id="qr-code-image" src="" alt="QR Code">
-            <a id="download-link" href="#" download="qrcode.png" class="btn btn-info">下载二维码</a>
+            <a id="download-link" href="#" download="qrcode.png" class="btn btn-info mt-2">下载二维码</a>
         </div>
     </div>
 

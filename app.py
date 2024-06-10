@@ -58,16 +58,6 @@ class Participant(db.Model):
     lottery_rule_id = db.Column(db.Integer, db.ForeignKey('lottery_rule.id'), nullable=True)
 
 
-# 初始化数据库
-with app.app_context():
-    db.create_all()
-    # 创建管理员账号
-    if not User.query.filter_by(phone='admin').first():
-        admin_user = User(phone='admin', password='admin', role='admin')
-        db.session.add(admin_user)
-        db.session.commit()
-
-
 @app.route('/')
 def login():
     return render_template('login.html')
@@ -369,6 +359,15 @@ def generate_qr_code():
     buffer.seek(0)
     return send_file(buffer, mimetype='image/png', as_attachment=False)
 # todo 需要修改home.html实现抽奖功能
+# 初始化数据库
+with app.app_context():
+    db.create_all()
+    # 创建管理员账号
+    if not User.query.filter_by(phone='admin').first():
+        admin_user = User(phone='admin', password='admin', role='admin')
+        db.session.add(admin_user)
+        db.session.commit()
+
 
 if __name__ == '__main__':
     db.create_all()

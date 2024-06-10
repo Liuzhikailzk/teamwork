@@ -6,16 +6,33 @@
     <title>抽奖规则设置页面</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
+        body {
+            background-color: #f4f4f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         .container {
             margin-top: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .qr-code-container {
             text-align: center;
             margin-top: 20px;
+            display: none;
         }
         .qr-code-container img {
             max-width: 200px;
             margin-top: 10px;
+        }
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .actions .btn {
+            margin-left: 10px;
         }
     </style>
 </head>
@@ -83,14 +100,16 @@
                     <option value="随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品" {% if rule and rule.mode == "随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品" %}selected{% endif %}>随机抽取获奖人员后，随机抽取奖品但排除已抽取完毕奖品</option>
                 </select>
             </div>
-            <button type="button" class="btn btn-secondary" onclick="saveDraft()">暂存</button>
-            <button type="submit" class="btn btn-primary">提交</button>
-            <button type="button" class="btn btn-secondary" onclick="window.history.back()">返回</button>
+            <div class="actions">
+                <button type="button" class="btn btn-secondary" onclick="saveDraft()">暂存</button>
+                <button type="submit" class="btn btn-primary">提交</button>
+                <button type="button" class="btn btn-secondary" onclick="window.history.back()">返回</button>
+            </div>
         </form>
-        <div class="qr-code-container">
+        <div class="qr-code-container" id="qr-code-container">
             <h4>现场人员扫码报名</h4>
             <img id="qr-code-image" src="" alt="QR Code">
-            <a id="download-link" href="#" download="qrcode.png" class="btn btn-info">下载二维码</a>
+            <a id="download-link" href="#" download="qrcode.png" class="btn btn-info mt-2">下载二维码</a>
         </div>
     </div>
 
@@ -154,14 +173,15 @@
 
         function generateQRCode() {
             const participants = document.getElementById('participants').value;
+            const qrCodeContainer = document.getElementById('qr-code-container');
+            const qrCodeImage = document.getElementById('qr-code-image');
+            const downloadLink = document.getElementById('download-link');
+
             if (participants === '现场扫码') {
                 const name = document.getElementById('name').value;
                 const description = document.getElementById('description').value;
                 const department = document.getElementById('department').value;
                 const mode = document.getElementById('mode').value;
-
-                const qrCodeImage = document.getElementById('qr-code-image');
-                const downloadLink = document.getElementById('download-link');
 
                 fetch(`/generate_qr_code?name=${encodeURIComponent(name)}&description=${encodeURIComponent(description)}&department=${encodeURIComponent(department)}&participants=${encodeURIComponent(participants)}&mode=${encodeURIComponent(mode)}`)
                     .then(response => response.blob())
@@ -169,7 +189,10 @@
                         const url = URL.createObjectURL(blob);
                         qrCodeImage.src = url;
                         downloadLink.href = url;
+                        qrCodeContainer.style.display = 'block';  // 显示二维码容器
                     });
+            } else {
+                qrCodeContainer.style.display = 'none';  // 隐藏二维码容器
             }
         }
 

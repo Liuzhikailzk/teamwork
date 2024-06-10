@@ -5,36 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>主页</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
         .container {
-            width: 300px;
-            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
         }
         h2 {
-            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.2em;
         }
         button {
-            padding: 10px 15px;
+            padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
             border: none;
+            border-radius: 4px;
             cursor: pointer;
-            display: block;
-            margin: 20px auto;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .wheel-container {
+            position: relative;
+            margin: 0 auto 20px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 10px solid #4CAF50;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-image: conic-gradient(
+                #FF5733 0deg 45deg,
+                #FFC300 45deg 90deg,
+                #DAF7A6 90deg 135deg,
+                #33FF57 135deg 180deg,
+                #33FFF6 180deg 225deg,
+                #3357FF 225deg 270deg,
+                #8E33FF 270deg 315deg,
+                #FF33A6 315deg 360deg
+            );
+            transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 20px solid #FF5733;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>欢迎来到主页</h2>
-        <p>登录成功！</p>
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel"></div>
+        </div>
+        <button id="spin" onclick="spinWheel()">点击抽奖</button>
         <button onclick="logout()">退出登录</button>
     </div>
 
     <script>
+        function spinWheel() {
+            const wheel = document.getElementById('wheel');
+            const randomDegree = Math.floor(Math.random() * 360) + 720; // 随机度数，至少转两圈
+            wheel.style.transform = `rotate(${randomDegree}deg)`;
+        }
+
         function logout() {
             $.post('/logout', function(response) {
                 if (response.success) {

@@ -6,11 +6,27 @@
     <title>抽奖规则设置首页</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
+        body {
+            background-color: #f4f4f9;
+        }
         .container {
             margin-top: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .actions button {
             margin-right: 5px;
+        }
+        .back-button {
+            margin-top: 10px;
+        }
+        table {
+            margin-top: 20px;
+        }
+        th, td {
+            text-align: center;
         }
     </style>
 </head>
@@ -22,8 +38,8 @@
             <button type="submit" class="btn btn-primary ml-3">搜索</button>
             <button type="button" class="btn btn-success ml-auto" onclick="window.location.href='/add_lottery_rule'">新增规则</button>
         </form>
-        <table class="table table-bordered">
-            <thead>
+        <table class="table table-bordered table-hover">
+            <thead class="thead-light">
                 <tr>
                     <th>编号</th>
                     <th>规则名称</th>
@@ -44,8 +60,8 @@
                     <td>{{ rule.department }}</td>
                     <td>{{ rule.description }}</td>
                     <td class="actions">
-                        <button class="btn btn-primary" onclick="editRule({{ rule.id }})">编辑</button>
-                        <button class="btn btn-danger" onclick="deleteRule({{ rule.id }})">删除</button>
+                        <button class="btn btn-primary btn-sm" onclick="editRule({{ rule.id }})">编辑</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteRule({{ rule.id }})">删除</button>
                     </td>
                 </tr>
                 {% endfor %}
